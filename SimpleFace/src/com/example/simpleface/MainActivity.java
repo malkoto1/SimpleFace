@@ -1,17 +1,28 @@
 package com.example.simpleface;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
 import com.facebook.android.*;
 import com.facebook.android.Facebook.*;
-//import com.facebook.android.RequestListener;
 
 public class MainActivity extends Activity {
 
-    Facebook facebook = new Facebook("faM0RBE10tnx+tvv9TCzTQ3CKPU");
+    Facebook facebook = new Facebook("336481539761026");
     private SharedPreferences mPrefs;
+    ListView friendsListView = (ListView) findViewById(R.id.friendsListView);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,8 +39,36 @@ public class MainActivity extends Activity {
         }
         if(expires != 0) {
             facebook.setAccessExpires(expires);
-            //facebook.request("me/albums", new Bundle() );
         }
+        
+        Bundle parameters = new Bundle();
+        parameters.putString("method", "friends.get");
+        String response = new String();
+        try {
+			 response = facebook.request(parameters);
+			 JSONArray friendsArray = new JSONArray(response);
+			 
+			 String[] values = new String[friendsArray.length()];
+			 
+			 for (int i = 0; i < friendsArray.length(); i++) {
+					JSONObject friendObject = friendsArray.getJSONObject(i);
+					values[i] = friendObject.getString("name");
+			 }
+			 
+			 ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+						android.R.layout.simple_list_item_1, android.R.id.text1, values);
+			 
+			 friendsListView.setAdapter(adapter);
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
         /*
          * Only call authorize if the access_token has expired.
@@ -37,6 +76,7 @@ public class MainActivity extends Activity {
         if(!facebook.isSessionValid()) {
 
             facebook.authorize(this, new String[] {}, new DialogListener() {
+
                 public void onComplete(Bundle values) {
                     SharedPreferences.Editor editor = mPrefs.edit();
                     editor.putString("access_token", facebook.getAccessToken());
@@ -63,5 +103,10 @@ public class MainActivity extends Activity {
     public void onResume() {    
         super.onResume();
         facebook.extendAccessTokenIfNeeded(this, null);
+    }
+    
+    public void logOut(View view) throws MalformedURLException, IOException{
+    	facebook.logout(getBaseContext());
+    	//MainActivity.class.;
     }
 }
