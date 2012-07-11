@@ -22,11 +22,12 @@ public class MainActivity extends Activity {
 
     Facebook facebook = new Facebook("336481539761026");
     private SharedPreferences mPrefs;
-    ListView friendsListView = (ListView) findViewById(R.id.friendsListView);
+    String response = new String();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ListView friendsListView = (ListView) findViewById(R.id.friendsListView);
         setContentView(R.layout.activity_main);
         /*
          * Get existing access_token if any
@@ -34,6 +35,8 @@ public class MainActivity extends Activity {
         mPrefs = getPreferences(MODE_PRIVATE);
         String access_token = mPrefs.getString("access_token", null);
         long expires = mPrefs.getLong("access_expires", 0);
+        Bundle parameters = new Bundle();
+        
         if(access_token != null) {
             facebook.setAccessToken(access_token);
         }
@@ -41,39 +44,10 @@ public class MainActivity extends Activity {
             facebook.setAccessExpires(expires);
         }
         
-        Bundle parameters = new Bundle();
-        parameters.putString("method", "friends.get");
-        String response = new String();
-        try {
-			 response = facebook.request(parameters);
-			 JSONArray friendsArray = new JSONArray(response);
-			 
-			 String[] values = new String[friendsArray.length()];
-			 
-			 for (int i = 0; i < friendsArray.length(); i++) {
-					JSONObject friendObject = friendsArray.getJSONObject(i);
-					values[i] = friendObject.getString("name");
-			 }
-			 
-			 ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-						android.R.layout.simple_list_item_1, android.R.id.text1, values);
-			 
-			 friendsListView.setAdapter(adapter);
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        
         /*
          * Only call authorize if the access_token has expired.
          */
-        if(!facebook.isSessionValid()) {
+        if(true) {
 
             facebook.authorize(this, new String[] {}, new DialogListener() {
 
@@ -91,6 +65,39 @@ public class MainActivity extends Activity {
                 public void onCancel() {}
             });
         }
+        
+        parameters.putString("method", "friends.get");
+        
+        try {
+			 response = facebook.request(parameters);
+			 //System.out.println(response);
+			 JSONArray friendsArray = new JSONArray(response);
+			 
+			 String[] values = new String[friendsArray.length()];
+			 
+			 for (int i = 0; i < friendsArray.length(); i++) {
+				parameters.clear();
+				String[] stringArray = {"users.getInfo", friendsArray.getString(i)};
+				parameters.putStringArray("method", stringArray);
+				response = facebook.request(parameters);
+				JSONObject friendObject = new JSONObject(response);
+				values[i] = friendObject.getString("name");
+			 }
+			 
+			 ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+						android.R.layout.simple_list_item_1, android.R.id.text1, values);
+			 
+			 friendsListView.setAdapter(adapter);
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     @Override
