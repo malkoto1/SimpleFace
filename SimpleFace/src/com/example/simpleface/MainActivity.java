@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
 			 for (int i = 0; i < friendsArray.length(); i++) {
 				parameters.clear();
 				//String[] stringArray = {"users.getInfo", friendsArray.getString(i)};
-				parameters.putString("method", "users.getInfo");
+				parameters.putString("method", "users.getStandardInfo");
 				response = facebook.request(parameters);
 				System.out.println(response);
 				JSONObject friendObject = new JSONObject(response);
